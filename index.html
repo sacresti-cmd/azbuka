@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+<title>Азбука Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;700&display=swap">
+<style>
+/* Layout: one centered study column — header, mode tabs, deck filters, then the working surface (card / quiz / chart). Cobalt accent nods to Gzhel porcelain. */
+:root {
+  --bg: #F2F4F9;
+  --surface: #FFFFFF;
+  --ink: #131A2F;
+  --muted: #5A6383;
+  --line: #D8DDEA;
+  --accent: #2342B5;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E2E8FB;
+  --good: #1D7A4D;
+  --good-soft: #DDF2E6;
+  --warn: #A9601A;
+  --warn-soft: #FBEBD9;
+  --bad: #B3322B;
+  --bad-soft: #FBE1DF;
+  --display: "PT Serif", Georgia, "Times New Roman", serif;
+  --body: "PT Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1020; --surface: #161C33; --ink: #E7EBF7; --muted: #99A2C1; --line: #2A3353;
+    --accent: #8FA5FF; --accent-ink: #0C1020; --accent-soft: #1E2850;
+    --good: #5CC58F; --good-soft: #163527; --warn: #E3A55C; --warn-soft: #3A2A16;
+    --bad: #F0857C; --bad-soft: #3C1D1C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1020; --surface: #161C33; --ink: #E7EBF7; --muted: #99A2C1; --line: #2A3353;
+  --accent: #8FA5FF; --accent-ink: #0C1020; --accent-soft: #1E2850;
+  --good: #5CC58F; --good-soft: #163527; --warn: #E3A55C; --warn-soft: #3A2A16;
+  --bad: #F0857C; --bad-soft: #3C1D1C; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5;
+}
+.wrap {
+  max-width: 760px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2.4rem; line-height: 1; margin: 0; letter-spacing: -0.01em; }
+h1 small { display: block; font-family: var(--body); font-weight: 400; font-size: 0.95rem; color: var(--muted); margin-top: 8px; letter-spacing: 0; }
+.stats { display: flex; gap: 8px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.pill { font-size: 0.85rem; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.pill b { color: var(--ink); }
+.pill.k b { color: var(--good); }
+.pill.l b { color: var(--warn); }
+
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.tabs button { flex: 1; border: 0; background: transparent; color: var(--muted); font: 700 0.95rem var(--body); padding: 10px 8px; border-radius: 8px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.filters { display: flex; flex-direction: column; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 0.85rem var(--body); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+
+button:focus-visible, .tile:focus-visible, .card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Card */
+.stage { display: flex; flex-direction: column; gap: 14px; }
+.counter { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.bar { height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+.card { perspective: 1400px; cursor: pointer; border-radius: 20px; }
+.inner { position: relative; min-height: 360px; transition: transform .5s cubic-bezier(.2,.7,.2,1); transform-style: preserve-3d; }
+.card.flipped .inner { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 10px 30px -18px rgba(20,30,70,.35); }
+.back { transform: rotateY(180deg); }
+.face-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.badge { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; }
+.status { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.status.known { color: var(--good); background: var(--good-soft); }
+.status.learning { color: var(--warn); background: var(--warn-soft); }
+.big { flex: 1; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: clamp(6rem, 26vw, 9.5rem); line-height: 1; gap: 0.12em; }
+.big .lo { color: var(--accent); }
+.big.prompt { font-family: var(--body); font-size: clamp(2.4rem, 10vw, 3.4rem); font-weight: 700; flex-direction: column; gap: 6px; text-align: center; }
+.big.prompt span { font-size: 1rem; font-weight: 400; color: var(--muted); }
+.hint { text-align: center; color: var(--muted); font-size: 0.85rem; }
+.back-grid { flex: 1; display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; align-items: center; margin-top: 10px; }
+.back-letter { font-family: var(--display); font-size: 4.6rem; line-height: 1; grid-row: span 2; }
+.sound { font-size: 2.2rem; font-weight: 700; line-height: 1.1; color: var(--accent); }
+.like { color: var(--muted); }
+.example { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 6px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.example .w { font-family: var(--display); font-size: 1.8rem; }
+.example .t { color: var(--muted); font-style: italic; }
+.tip { grid-column: 1 / -1; font-size: 0.92rem; background: var(--bg); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.name { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); }
+.name b { font-family: var(--display); color: var(--ink); font-weight: 400; font-size: 1rem; }
+
+.say { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: 0.85rem var(--body); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.say svg { width: 16px; height: 16px; fill: currentColor; }
+
+.controls { display: grid; grid-template-columns: auto 1fr 1fr auto; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 700 0.95rem var(--body); padding: 12px 14px; border-radius: 12px; cursor: pointer; }
+.btn.learn { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.btn.know { color: var(--good); border-color: var(--good); background: var(--good-soft); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.keys { font-size: 0.78rem; color: var(--muted); text-align: center; }
+kbd { font-family: var(--body); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+.empty { text-align: center; padding: 48px 16px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 20px; }
+
+/* Quiz */
+.quiz { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+.q-big { text-align: center; font-family: var(--display); font-size: clamp(4.5rem, 20vw, 7rem); line-height: 1.05; }
+.q-big.word { font-size: clamp(2.6rem, 12vw, 4rem); }
+.q-ask { text-align: center; color: var(--muted); }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opt { border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 700 1.15rem var(--body); padding: 16px 10px; border-radius: 12px; cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt.right { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.opt.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.opt:disabled { cursor: default; }
+.feedback { min-height: 1.5em; text-align: center; }
+.feedback b { font-family: var(--display); font-size: 1.15rem; }
+
+/* Chart */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.tile { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 6px 8px; text-align: center; cursor: pointer; position: relative; font: inherit; }
+.tile .tl { font-family: var(--display); font-size: 2rem; line-height: 1.1; }
+.tile .ts { font-size: 0.85rem; color: var(--accent); font-weight: 700; }
+.tile::after { content: ""; position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.tile.known::after { background: var(--good); }
+.tile.learning::after { background: var(--warn); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.85rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--line); }
+.legend .k::before { background: var(--good); }
+.legend .l::before { background: var(--warn); }
+.reset { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: 0.85rem var(--body); padding: 0; }
+
+@media (max-width: 520px) {
+  .controls { grid-template-columns: 1fr 1fr; }
+  .controls .nav { order: 2; }
+  .inner { min-height: 400px; }
+  .back-grid { grid-template-columns: 1fr; }
+  .back-letter { grid-row: auto; font-size: 3.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .inner, .bar i { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Азбука<small>The 33 letters of the Russian alphabet</small></h1>
+    <div class="stats" aria-live="polite">
+      <span class="pill k">Known <b id="nKnown">0</b>/33</span>
+      <span class="pill l">Learning <b id="nLearn">0</b></span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-cards" aria-selected="true" data-view="cards">Cards</button>
+    <button role="tab" id="tab-quiz" aria-selected="false" data-view="quiz">Quiz</button>
+    <button role="tab" id="tab-chart" aria-selected="false" data-view="chart">Alphabet</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="chips" id="groupChips"></div>
+    <div class="row">
+      <span class="label">Show</span>
+      <div class="chips" id="dirChips"></div>
+      <button class="chip" id="onlyLearning" aria-pressed="false">Only "still learning"</button>
+      <button class="chip" id="shuffleBtn">Shuffle</button>
+    </div>
+  </div>
+
+  <section id="view-cards" class="stage"></section>
+  <section id="view-quiz" class="stage" hidden></section>
+  <section id="view-chart" class="stage" hidden></section>
+</div>
+
+<script>
+const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>';
+
+const GROUPS = {
+  all:   "All 33",
+  twins: "Same as English",
+  false: "False friends",
+  new:   "New shapes",
+  signs: "Signs"
+};
+
+// [Upper, lower, letter name, sound, "sounds like", group, example word, transliteration, meaning, tip]
+const DATA = [
+  ["А","а","а","a",'a in "father"',"twins","а́дрес","ádres","address",""],
+  ["Б","б","бэ","b",'b in "bat"',"new","бана́н","banán","banana","Looks like a 6 with a flat top."],
+  ["В","в","вэ","v",'v in "van"',"false","вода́","vodá","water","Looks like B but sounds like V."],
+  ["Г","г","гэ","g",'g in "go"',"new","го́род","górod","city","Like an upside-down L. Always a hard g."],
+  ["Д","д","дэ","d",'d in "dog"',"new","дом","dom","house","Looks like a little house with feet."],
+  ["Е","е","е","ye",'ye in "yes"',"false","еда́","yedá","food","Looks like E but starts with a y glide. After a consonant it softens it: нет = nyet."],
+  ["Ё","ё","ё","yo",'yo in "yonder"',"new","ёлка","yólka","fir tree","Always stressed. Russians often skip the dots, so ё may be printed as е."],
+  ["Ж","ж","жэ","zh",'s in "pleasure"',"new","журна́л","zhurnál","magazine","Shaped like a beetle, and жук (zhuk) means beetle."],
+  ["З","з","зэ","z",'z in "zoo"',"new","зима́","zimá","winter","Looks like the number 3."],
+  ["И","и","и","ee",'ee in "see"',"new","и́мя","ímya","name","Looks like a backwards N. On its own, и means \"and\"."],
+  ["Й","й","и кра́ткое","y",'y in "boy"',"new","йо́гурт","yógurt","yogurt","Called \"short и\". Usually follows a vowel: мой (moy) = my."],
+  ["К","к","ка","k",'k in "kite"',"twins","кот","kot","cat",""],
+  ["Л","л","эль","l",'l in "lamp"',"new","ла́мпа","lámpa","lamp","Like a pointed arch or the Greek lambda."],
+  ["М","м","эм","m",'m in "mom"',"twins","ма́ма","máma","mom",""],
+  ["Н","н","эн","n",'n in "no"',"false","нет","nyet","no","Looks like H but sounds like N."],
+  ["О","о","о","o",'o in "more"',"twins","окно́","oknó","window","When not stressed it sounds closer to \"a\": молоко́ (milk) sounds like \"malakó\"."],
+  ["П","п","пэ","p",'p in "pot"',"new","па́па","pápa","dad","Like the Greek letter pi."],
+  ["Р","р","эр","r","a rolled r, like Spanish \"pero\"","false","ры́ба","rýba","fish","Looks like P but it is an R. Tap the tongue once behind the teeth."],
+  ["С","с","эс","s",'s in "sun"',"false","сок","sok","juice","Looks like C and always sounds like S, never K."],
+  ["Т","т","тэ","t",'t in "top"',"twins","торт","tort","cake","In italics and handwriting, lowercase т looks like an m."],
+  ["У","у","у","oo",'oo in "boot"',"false","у́тро","útro","morning","Looks like y but sounds like oo."],
+  ["Ф","ф","эф","f",'f in "fun"',"new","фо́то","fóto","photo","A circle with a line through it."],
+  ["Х","х","ха","kh",'ch in Scottish "loch"',"false","хлеб","khleb","bread","Looks like X. A breathy, throaty h, never \"ks\"."],
+  ["Ц","ц","цэ","ts",'ts in "cats"',"new","цирк","tsirk","circus","Like п upside down with a small tail."],
+  ["Ч","ч","че","ch",'ch in "chair"',"new","чай","chay","tea","Looks like an upside-down h. Always soft."],
+  ["Ш","ш","ша","sh",'sh in "shop"',"new","шко́ла","shkóla","school","Three prongs. A hard, deep sh."],
+  ["Щ","щ","ща","shch",'a long, soft "sh", like "sh" in "sheep" held longer',"new","борщ","borshch","borscht","Ш with a tail. Softer and longer than ш."],
+  ["Ъ","ъ","твёрдый знак","—","no sound of its own","signs","подъе́зд","podyézd","building entrance","Hard sign. Adds a tiny pause before е, ё, ю, я. Rare."],
+  ["Ы","ы","ы","y (ɨ)",'no English match: say "ee" with your tongue pulled back',"new","сыр","syr","cheese","Never starts a word. Practice: мы (we), ты (you), вы (you, formal)."],
+  ["Ь","ь","мя́гкий знак","ʼ","no sound of its own","signs","день","den'","day","Soft sign. Softens the consonant before it, like a faint y after it."],
+  ["Э","э","э","e",'e in "met"',"new","э́то","éto","this / it","A backwards-facing E with no y sound."],
+  ["Ю","ю","ю","yu",'"you"',"new","юг","yug","south","Looks like I-O joined together."],
+  ["Я","я","я","ya",'ya in "yard"',"new","я́блоко","yábloko","apple","Looks like a backwards R. On its own, я means \"I\"."]
+].map((r, i) => ({ i, up:r[0], lo:r[1], name:r[2], sound:r[3], like:r[4], group:r[5], word:r[6], tr:r[7], mean:r[8], tip:r[9] }));
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("azbuka:" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("azbuka:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+const state = {
+  view: "cards",
+  group: store.get("group", "all"),
+  dir: store.get("dir", "letter"),
+  onlyLearning: false,
+  status: store.get("status", {}),
+  order: DATA.map(d => d.i),
+  pos: 0,
+  flipped: false,
+  quizType: "letters",
+  quiz: null,
+  score: { right: 0, total: 0, streak: 0 }
+};
+
+const $ = id => document.getElementById(id);
+const plain = s => s.replace(/́/g, "");
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function speak(text) {
+  try {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(plain(text));
+    u.lang = "ru-RU"; u.rate = 0.8;
+    const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith("ru"));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+function deck() {
+  return state.order.map(i => DATA[i]).filter(d =>
+    (state.group === "all" || d.group === state.group) &&
+    (!state.onlyLearning || state.status[d.up] !== "known"));
+}
+
+function setStatus(d, s) {
+  state.status[d.up] = s;
+  store.set("status", state.status);
+  updateStats();
+}
+
+function updateStats() {
+  const v = Object.values(state.status);
+  $("nKnown").textContent = v.filter(x => x === "known").length;
+  $("nLearn").textContent = v.filter(x => x === "learning").length;
+}
+
+function renderFilters() {
+  $("groupChips").innerHTML = Object.entries(GROUPS).map(([k, v]) => {
+    const n = k === "all" ? 33 : DATA.filter(d => d.group === k).length;
+    return `<button class="chip" data-g="${k}" aria-pressed="${state.group === k}">${v} · ${n}</button>`;
+  }).join("");
+  $("dirChips").innerHTML = [["letter", "Letter first"], ["sound", "Sound first"]]
+    .map(([k, v]) => `<button class="chip" data-d="${k}" aria-pressed="${state.dir === k}">${v}</button>`).join("");
+  $("onlyLearning").setAttribute("aria-pressed", state.onlyLearning);
+  $("dirChips").hidden = state.view !== "cards";
+  $("shuffleBtn").hidden = state.view !== "cards";
+  $("filters").hidden = state.view === "chart";
+}
+
+function statusTag(d) {
+  const s = state.status[d.up];
+  return s ? `<span class="status ${s}">${s === "known" ? "Known" : "Still learning"}</span>` : "";
+}
+
+function renderCards() {
+  const el = $("view-cards");
+  const list = deck();
+  if (!list.length) {
+    el.innerHTML = `<div class="empty">Nothing left here. Every letter in this group is marked known.<br><br><button class="btn primary" id="showAll">Show all letters</button></div>`;
+    $("showAll").onclick = () => { state.onlyLearning = false; state.group = "all"; store.set("group", "all"); state.pos = 0; render(); };
+    return;
+  }
+  if (state.pos >= list.length) state.pos = 0;
+  const d = list[state.pos];
+  const front = state.dir === "letter"
+    ? `<div class="big"><span>${d.up}</span><span class="lo">${d.lo}</span></div>`
+    : `<div class="big prompt">${d.sound}<span>${d.like}</span></div>`;
+  el.innerHTML = `
+    <div class="counter"><span>${state.pos + 1} of ${list.length}</span><span>${GROUPS[d.group]}</span></div>
+    <div class="bar"><i style="width:${((state.pos + 1) / list.length) * 100}%"></i></div>
+    <div class="card ${state.flipped ? "flipped" : ""}" id="card" tabindex="0" role="button" aria-label="Flashcard, press to flip">
+      <div class="inner">
+        <div class="face front">
+          <div class="face-top"><span class="badge">${state.dir === "letter" ? "What sound?" : "Which letter?"}</span>${statusTag(d)}</div>
+          ${front}
+          <div class="hint">Tap to flip</div>
+        </div>
+        <div class="face back">
+          <div class="face-top"><span class="badge">${GROUPS[d.group]}</span><button class="say" id="sayLetter" aria-label="Hear the letter name">${ICON} Letter</button></div>
+          <div class="back-grid">
+            <div class="back-letter">${d.up}${d.lo}</div>
+            <div class="sound">${d.sound}</div>
+            <div class="like">${d.like}</div>
+            <div class="example">
+              <span class="w">${d.word}</span><span class="t">${d.tr}</span><span>${d.mean}</span>
+              <button class="say" id="sayWord" aria-label="Hear the word">${ICON} Word</button>
+            </div>
+            ${d.tip ? `<div class="tip">${d.tip}</div>` : ""}
+            <div class="name">Letter name: <b>${d.name}</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn nav" id="prev" aria-label="Previous card">←</button>
+      <button class="btn learn" id="markL">Still learning</button>
+      <button class="btn know" id="markK">Got it</button>
+      <button class="btn nav" id="next" aria-label="Next card">→</button>
+    </div>
+    <div class="keys"><kbd>Space</kbd> flip · <kbd>←</kbd><kbd>→</kbd> move · <kbd>1</kbd> still learning · <kbd>2</kbd> got it</div>`;
+  $("card").onclick = e => { if (e.target.closest(".say")) return; flip(); };
+  $("sayLetter").onclick = e => { e.stopPropagation(); speak(d.name); };
+  $("sayWord").onclick = e => { e.stopPropagation(); speak(d.word); };
+  $("prev").onclick = () => move(-1);
+  $("next").onclick = () => move(1);
+  $("markL").onclick = () => mark("learning");
+  $("markK").onclick = () => mark("known");
+}
+
+function flip() { state.flipped = !state.flipped; $("card").classList.toggle("flipped", state.flipped); }
+function move(n) {
+  const len = deck().length; if (!len) return;
+  state.pos = (state.pos + n + len) % len; state.flipped = false; renderCards();
+}
+function mark(s) {
+  const list = deck(); const d = list[state.pos]; if (!d) return;
+  setStatus(d, s);
+  if (state.onlyLearning && s === "known") { state.flipped = false; renderCards(); }
+  else move(1);
+}
+
+/* Quiz */
+function newQuestion() {
+  const pool = DATA.filter(d => state.group === "all" || d.group === state.group)
+    .filter(d => !state.onlyLearning || state.status[d.up] !== "known");
+  const src = pool.length ? pool : DATA;
+  // weight letters you haven't mastered
+  const weighted = src.flatMap(d => state.status[d.up] === "known" ? [d] : [d, d, d]);
+  let t;
+  do { t = weighted[Math.floor(Math.random() * weighted.length)]; } while (state.quiz && t === state.quiz.target && src.length > 1);
+  const key = state.quizType === "letters" ? "sound" : "tr";
+  const others = shuffle(DATA.filter(d => d !== t && d[key] !== t[key])).slice(0, 3);
+  state.quiz = { target: t, key, options: shuffle([t, ...others]), answered: null };
+}
+
+function renderQuiz() {
+  const el = $("view-quiz");
+  if (!state.quiz) newQuestion();
+  const q = state.quiz, t = q.target;
+  const pct = state.score.total ? Math.round(100 * state.score.right / state.score.total) : 0;
+  el.innerHTML = `
+    <div class="row" style="justify-content:space-between">
+      <div class="chips">
+        <button class="chip" data-q="letters" aria-pressed="${state.quizType === "letters"}">Letter → sound</button>
+        <button class="chip" data-q="words" aria-pressed="${state.quizType === "words"}">Read the word</button>
+      </div>
+      <span class="pill">Score <b>${state.score.right}/${state.score.total}</b>${state.score.total ? ` · ${pct}%` : ""} · Streak <b>${state.score.streak}</b></span>
+    </div>
+    <div class="quiz">
+      <div class="q-ask">${state.quizType === "letters" ? "What sound does this letter make?" : "How do you read this word?"}</div>
+      <div class="q-big ${state.quizType === "words" ? "word" : ""}">${state.quizType === "letters" ? t.up + t.lo : t.word}</div>
+      <div class="opts">${q.options.map((o, i) => {
+        let cls = "";
+        if (q.answered) { if (o === t) cls = "right"; else if (o === q.answered) cls = "wrong"; }
+        return `<button class="opt ${cls}" data-o="${i}" ${q.answered ? "disabled" : ""}>${o[q.key]}</button>`;
+      }).join("")}</div>
+      <div class="feedback" aria-live="polite">${q.answered ? feedbackText(q) : ""}</div>
+      ${q.answered ? `<div class="row" style="justify-content:center"><button class="say" id="qSay">${ICON} Hear it</button><button class="btn primary" id="qNext">Next question</button></div>` : ""}
+    </div>
+    <div class="keys"><kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>Enter</kbd> next</div>`;
+  el.querySelectorAll("[data-q]").forEach(b => b.onclick = () => { state.quizType = b.dataset.q; state.quiz = null; renderQuiz(); });
+  el.querySelectorAll("[data-o]").forEach(b => b.onclick = () => answer(+b.dataset.o));
+  if (q.answered) {
+    $("qNext").onclick = () => { newQuestion(); renderQuiz(); };
+    $("qSay").onclick = () => speak(t.word);
+    $("qNext").focus();
+  }
+}
+
+function feedbackText(q) {
+  const t = q.target, ok = q.answered === t;
+  const detail = `<b>${t.up}${t.lo}</b> = ${t.sound} (${t.like}) · <b>${t.word}</b> ${t.tr}, “${t.mean}”`;
+  return (ok ? `<span style="color:var(--good);font-weight:700">Right!</span> ` : `<span style="color:var(--bad);font-weight:700">Not quite.</span> `) + detail;
+}
+
+function answer(i) {
+  const q = state.quiz; if (q.answered) return;
+  q.answered = q.options[i];
+  const ok = q.answered === q.target;
+  state.score.total++;
+  if (ok) { state.score.right++; state.score.streak++; }
+  else { state.score.streak = 0; if (state.status[q.target.up] !== "known") setStatus(q.target, "learning"); }
+  renderQuiz();
+}
+
+/* Chart */
+function renderChart() {
+  const el = $("view-chart");
+  el.innerHTML = `
+    <div class="legend"><span class="k">Known</span><span class="l">Still learning</span><span>Not marked yet</span></div>
+    <div class="grid">${DATA.map(d =>
+      `<button class="tile ${state.status[d.up] || ""}" data-i="${d.i}" aria-label="${d.up}, sounds like ${d.sound}"><div class="tl">${d.up}${d.lo}</div><div class="ts">${d.sound}</div></button>`
+    ).join("")}</div>
+    <div class="row" style="justify-content:space-between">
+      <span class="hint" style="text-align:left">Tap any letter to open its card.</span>
+      <button class="reset" id="resetBtn">Reset my progress</button>
+    </div>
+    <div id="confirmReset" hidden class="row"><span>Clear all known / learning marks?</span><button class="btn" id="noReset">Cancel</button><button class="btn learn" id="yesReset">Clear progress</button></div>`;
+  el.querySelectorAll(".tile").forEach(b => b.onclick = () => {
+    state.group = "all"; state.onlyLearning = false; state.order = DATA.map(d => d.i);
+    state.pos = +b.dataset.i; state.flipped = false; switchView("cards");
+  });
+  $("resetBtn").onclick = () => $("confirmReset").hidden = false;
+  $("noReset").onclick = () => $("confirmReset").hidden = true;
+  $("yesReset").onclick = () => { state.status = {}; store.set("status", {}); updateStats(); renderChart(); };
+}
+
+function switchView(v) {
+  state.view = v;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === v));
+  ["cards", "quiz", "chart"].forEach(k => $("view-" + k).hidden = k !== v);
+  render();
+}
+
+function render() {
+  renderFilters();
+  if (state.view === "cards") renderCards();
+  if (state.view === "quiz") renderQuiz();
+  if (state.view === "chart") renderChart();
+}
+
+document.querySelector(".tabs").onclick = e => { const b = e.target.closest("button"); if (b) switchView(b.dataset.view); };
+$("groupChips").onclick = e => { const b = e.target.closest("[data-g]"); if (!b) return; state.group = b.dataset.g; store.set("group", state.group); state.pos = 0; state.flipped = false; state.quiz = null; render(); };
+$("dirChips").onclick = e => { const b = e.target.closest("[data-d]"); if (!b) return; state.dir = b.dataset.d; store.set("dir", state.dir); state.flipped = false; render(); };
+$("onlyLearning").onclick = () => { state.onlyLearning = !state.onlyLearning; state.pos = 0; state.flipped = false; state.quiz = null; render(); };
+$("shuffleBtn").onclick = () => { state.order = shuffle(state.order); state.pos = 0; state.flipped = false; render(); };
+
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("input, textarea")) return;
+  if (state.view === "cards") {
+    if (e.key === " " || (e.key === "Enter" && e.target.id === "card")) { e.preventDefault(); flip(); }
+    else if (e.key === "ArrowRight") move(1);
+    else if (e.key === "ArrowLeft") move(-1);
+    else if (e.key === "1") mark("learning");
+    else if (e.key === "2") mark("known");
+  } else if (state.view === "quiz" && state.quiz) {
+    if (!state.quiz.answered && ["1","2","3","4"].includes(e.key)) answer(+e.key - 1);
+    else if (state.quiz.answered && e.key === "Enter") { e.preventDefault(); newQuestion(); renderQuiz(); }
+  }
+});
+
+try { speechSynthesis && speechSynthesis.getVoices(); } catch (e) {}
+updateStats();
+render();
+</script>
+</body>
+</html>
