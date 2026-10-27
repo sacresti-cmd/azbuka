@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Free spaced-repetition flashcards for the 420 most useful Russian words and phrases.">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+<title>Russian Core Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap">
+<style>
+/* Layout: one centered study column (card + rating row), a slim stats strip above, a browse list as a second tab */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --ink:#18213a; --muted:#5b6680; --line:#d5dbe7;
+  --accent:#2b4fb8; --accent-ink:#ffffff; --accent-soft:#e3e9f9;
+  --again:#b3322b; --hard:#a26b12; --good:#2b4fb8; --easy:#1f7a4d;
+  --display:"PT Serif", Georgia, "Times New Roman", serif;
+  --body:"PT Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --mono:"PT Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10141f; --surface:#1a2030; --ink:#e7ebf5; --muted:#9aa5bf; --line:#2c3449;
+  --accent:#7d9bf0; --accent-ink:#0e1424; --accent-soft:#232d47;
+  --again:#e8736b; --hard:#e0aa4f; --good:#7d9bf0; --easy:#5fc694; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141f; --surface:#1a2030; --ink:#e7ebf5; --muted:#9aa5bf; --line:#2c3449;
+  --accent:#7d9bf0; --accent-ink:#0e1424; --accent-soft:#232d47;
+  --again:#e8736b; --hard:#e0aa4f; --good:#7d9bf0; --easy:#5fc694; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px}
+h1{font-family:var(--display);font-size:1.5rem;margin:0;text-wrap:balance}
+h1 span{color:var(--muted);font-weight:400}
+.back{color:var(--accent);font-size:.9rem;text-decoration:none}.back:hover{text-decoration:underline}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.9rem;padding:6px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.stat small{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 20px 22px;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;box-shadow:0 1px 0 var(--line)}
+.tag{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tag em{font-style:normal;color:var(--accent);margin-left:6px}
+.ru{font-family:var(--display);font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.2;overflow-wrap:anywhere}
+.en{font-size:1.25rem;border-top:1px solid var(--line);padding-top:14px;width:100%;overflow-wrap:anywhere}
+.listen{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;font:inherit;font-size:.85rem;padding:4px 12px;cursor:pointer}
+.primary{width:100%;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;font-size:1.05rem;padding:14px;cursor:pointer}
+.rate{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rate button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;font:inherit;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.rate button span{font-weight:700}
+.rate button small{font-family:var(--mono);color:var(--muted);font-size:.78rem}
+.rate .again span{color:var(--again)}.rate .hard span{color:var(--hard)}.rate .good span{color:var(--good)}.rate .easy span{color:var(--easy)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{color:var(--muted);font-size:.82rem;text-align:center}
+.done{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.done h2{font-family:var(--display);margin:0;font-size:1.4rem}
+.secondary{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;font:inherit;padding:10px 16px;cursor:pointer}
+.foot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;color:var(--muted);font-size:.85rem}
+.foot label{display:flex;gap:6px;align-items:center}
+.foot select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 6px}
+.chip{display:inline-flex;align-items:center;gap:6px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.chip.ok i{background:var(--easy)}.chip.warn i{background:var(--hard)}.chip.err i{background:var(--again)}
+.search{width:100%;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.list h3{margin:0;padding:10px 14px 6px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+.row{display:grid;grid-template-columns:12px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:baseline;padding:7px 14px;border-top:1px solid var(--line)}
+.row .w{font-family:var(--display);font-size:1.05rem;overflow-wrap:anywhere}
+.row .m{color:var(--muted);overflow-wrap:anywhere}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line);align-self:center}
+.dot.l{background:var(--hard)}.dot.k{background:var(--easy)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.82rem}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.backup{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.backup summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+.backup[open]{display:flex;flex-direction:column;gap:10px}
+.bk-row{display:flex;flex-wrap:wrap;gap:8px}
+.backup textarea{width:100%;font-family:var(--mono);font-size:.78rem;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.backup .hint{text-align:left;margin:0}
+@media (max-width:420px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s ease}.card.flip{transform:scale(.99)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Русский <span>· Core 420</span></h1>
+    <a class="back" href="../">Азбука (alphabet) →</a>
+    <div class="tabs" role="tablist">
+      <button id="tab-study" role="tab" aria-selected="true">Study</button>
+      <button id="tab-browse" role="tab" aria-selected="false">All words</button>
+    </div>
+  </header>
+
+  <section id="study" style="display:flex;flex-direction:column;gap:14px">
+    <div class="stats">
+      <div class="stat"><b id="s-due">0</b><small>Reviews due</small></div>
+      <div class="stat"><b id="s-new">0</b><small>New today</small></div>
+      <div class="stat"><b id="s-seen">0</b><small>Started</small></div>
+      <div class="stat"><b id="s-known">0</b><small>Known (21d+)</small></div>
+    </div>
+    <div class="bar" title="Cards started out of 420"><i id="bar"></i></div>
+
+    <div id="cardbox">
+      <div class="card" id="card">
+        <div class="tag" id="c-tag">Loading your progress…</div>
+        <div class="ru" id="c-ru"></div>
+        <button class="listen" id="c-listen" hidden>Listen</button>
+        <div class="en" id="c-en" hidden></div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <button class="primary" id="show" disabled>Show answer</button>
+      <div class="rate" id="rate" hidden>
+        <button class="again" id="r1"><span>Again</span><small id="p1"></small></button>
+        <button class="hard" id="r2"><span>Hard</span><small id="p2"></small></button>
+        <button class="good" id="r3"><span>Good</span><small id="p3"></small></button>
+        <button class="easy" id="r4"><span>Easy</span><small id="p4"></small></button>
+      </div>
+    </div>
+
+    <div class="done" id="done" hidden>
+      <h2>Done for today</h2>
+      <p class="hint" id="done-msg">Come back tomorrow. Your next reviews are scheduled.</p>
+      <button class="secondary" id="more">Learn 7 more new words</button>
+    </div>
+
+    <p class="hint">Say each word out loud, then rate how well you knew it. Keys: Space to flip, 1 to 4 to rate.</p>
+
+    <div class="foot">
+      <span class="chip" id="sync"><i></i><span id="sync-t">Progress saved in this browser</span></span>
+      <label for="npd">New words per day
+        <select id="npd"><option>5</option><option selected>7</option><option>10</option><option>15</option><option>20</option></select>
+      </label>
+    </div>
+    <details class="backup" id="backup">
+      <summary>Back up or move your progress</summary>
+      <p class="hint" id="bk-note">Your progress is stored in this browser only. If school laptops get wiped, copy a backup code now and then and keep it in a Google Doc. To move your progress to another browser or device, copy your backup code here and restore it there.</p>
+      <div class="bk-row">
+        <button class="secondary" id="bk-copy">Copy backup code</button>
+        <button class="secondary" id="bk-restore">Restore from code</button>
+      </div>
+      <textarea id="bk-text" rows="3" placeholder="Your backup code appears here. To restore, paste a code here and press Restore." aria-label="Backup code"></textarea>
+      <p class="hint" id="bk-msg" role="status"></p>
+    </details>
+  </section>
+
+  <section id="browse" hidden style="display:flex;flex-direction:column;gap:12px">
+    <input class="search" id="q" type="search" placeholder="Search Russian or English" aria-label="Search words">
+    <div class="legend"><span><i class="dot"></i>Not started</span><span><i class="dot l"></i>Learning</span><span><i class="dot k"></i>Known (21 days+)</span></div>
+    <div class="list" id="list"></div>
+  </section>
+</div>
+
+<script>
+const CARDS = [["Приве́т!", "Hi!", "phrases"], ["Здра́вствуйте!", "Hello (formal, or to a group)", "phrases"], ["До́брое у́тро", "Good morning", "phrases"], ["До́брый день", "Good afternoon", "phrases"], ["До́брый ве́чер", "Good evening", "phrases"], ["Споко́йной но́чи", "Good night", "phrases"], ["Пока́!", "Bye!", "phrases"], ["До свида́ния", "Goodbye (formal)", "phrases"], ["До за́втра", "See you tomorrow", "phrases"], ["Как дела́?", "How are you? (informal)", "phrases"], ["Хорошо́, а у тебя́?", "Good, and you?", "phrases"], ["Норма́льно", "Fine / okay", "phrases"], ["Отли́чно", "Great / excellent", "phrases"], ["Так себе́", "So-so", "phrases"], ["Что но́вого?", "What's new?", "phrases"], ["Ничего́ осо́бенного", "Nothing special", "phrases"], ["Как тебя́ зову́т?", "What's your name? (informal)", "phrases"], ["Меня́ зову́т Сэм", "My name is Sam", "phrases"], ["О́чень прия́тно", "Nice to meet you", "phrases"], ["Отку́да ты?", "Where are you from?", "phrases"], ["Я из Аме́рики", "I'm from America", "phrases"], ["Спаси́бо", "Thank you", "phrases"], ["Большо́е спаси́бо", "Thank you very much", "phrases"], ["Пожа́луйста", "Please / You're welcome", "phrases"], ["Не́ за что", "You're welcome / no problem", "phrases"], ["Извини́", "Sorry / excuse me (informal)", "phrases"], ["Извини́те", "Sorry / excuse me (formal)", "phrases"], ["Ничего́ стра́шного", "No worries / it's nothing", "phrases"], ["Да", "Yes", "phrases"], ["Нет", "No", "phrases"], ["Я понима́ю", "I understand", "phrases"], ["Я не понима́ю", "I don't understand", "phrases"], ["Не зна́ю", "I don't know", "phrases"], ["Повтори́, пожа́луйста", "Repeat, please (informal)", "phrases"], ["Говори́ ме́дленнее, пожа́луйста", "Speak slower, please", "phrases"], ["Как сказа́ть ... по-ру́сски?", "How do you say ... in Russian?", "phrases"], ["Что э́то зна́чит?", "What does this mean?", "phrases"], ["Я учу́ ру́сский язы́к", "I'm learning Russian", "phrases"], ["Я немно́го говорю́ по-ру́сски", "I speak a little Russian", "phrases"], ["Ты говори́шь по-англи́йски?", "Do you speak English?", "phrases"], ["Коне́чно", "Of course", "phrases"], ["Мо́жет быть", "Maybe", "phrases"], ["Я то́же", "Me too", "phrases"], ["Пра́вда?", "Really?", "phrases"], ["Класс!", "Cool!", "phrases"], ["Кру́то!", "Awesome!", "phrases"], ["Ла́дно", "Okay / alright", "phrases"], ["Дава́й", "Let's / okay / (casual) bye", "phrases"], ["Без пробле́м", "No problem", "phrases"], ["Ничего́ себе́!", "Wow! / No way!", "phrases"], ["Уда́чи!", "Good luck!", "phrases"], ["С днём рожде́ния!", "Happy birthday!", "phrases"], ["Как прошёл твой день?", "How was your day?", "phrases"], ["Чем занима́ешься?", "What are you up to?", "phrases"], ["Я скуча́ю по тебе́", "I miss you", "phrases"], ["Мне нра́вится", "I like it", "phrases"], ["Мне ну́жно идти́", "I have to go", "phrases"], ["Ско́лько э́то сто́ит?", "How much does this cost?", "phrases"], ["Где туале́т?", "Where is the restroom?", "phrases"], ["Сла́ва Бо́гу", "Thank God", "phrases"], ["я", "I", "pronouns"], ["ты", "you (informal, one person)", "pronouns"], ["он", "he / it (masc.)", "pronouns"], ["она́", "she / it (fem.)", "pronouns"], ["оно́", "it (neuter)", "pronouns"], ["мы", "we", "pronouns"], ["вы", "you (formal or plural)", "pronouns"], ["они́", "they", "pronouns"], ["мой / моя́ / моё / мои́", "my (m / f / n / pl)", "pronouns"], ["твой / твоя́ / твоё / твои́", "your (informal)", "pronouns"], ["наш / на́ша / на́ше / на́ши", "our", "pronouns"], ["ваш / ва́ша / ва́ше / ва́ши", "your (formal/plural)", "pronouns"], ["его́", "his (said \"yevo\")", "pronouns"], ["её", "her", "pronouns"], ["их", "their", "pronouns"], ["э́то", "this / that / it is", "pronouns"], ["что", "what (said \"shto\")", "questions"], ["кто", "who", "questions"], ["где", "where", "questions"], ["куда́", "where to", "questions"], ["отку́да", "where from", "questions"], ["когда́", "when", "questions"], ["как", "how", "questions"], ["почему́", "why", "questions"], ["ско́лько", "how much / how many", "questions"], ["како́й / кака́я / како́е", "which / what kind of", "questions"], ["и", "and", "function"], ["а", "and / but (contrast)", "function"], ["но", "but", "function"], ["и́ли", "or", "function"], ["не", "not", "function"], ["здесь", "here", "function"], ["там", "there", "function"], ["сейча́с", "now", "function"], ["пото́м", "then / later", "function"], ["уже́", "already", "function"], ["ещё", "still / more / yet", "function"], ["то́же", "also / too", "function"], ["о́чень", "very", "function"], ["то́лько", "only", "function"], ["всё", "everything / all", "function"], ["все", "everyone", "function"], ["ка́ждый", "every / each", "function"], ["мно́го", "a lot / many", "function"], ["ма́ло", "little / few", "function"], ["немно́го", "a little", "function"], ["потому́ что", "because", "function"], ["е́сли", "if", "function"], ["пра́вда", "truth / really", "function"], ["наве́рное", "probably", "function"], ["всегда́", "always", "function"], ["никогда́", "never", "function"], ["иногда́", "sometimes", "function"], ["ча́сто", "often", "function"], ["сего́дня", "today (said \"sevodnya\")", "function"], ["вчера́", "yesterday", "function"], ["за́втра", "tomorrow", "function"], ["у́тром", "in the morning", "function"], ["днём", "in the afternoon", "function"], ["ве́чером", "in the evening", "function"], ["но́чью", "at night", "function"], ["с", "with (+ instrumental)", "function"], ["без", "without (+ genitive)", "function"], ["в", "in / to", "function"], ["на", "on / at / to", "function"], ["из", "from / out of", "function"], ["у", "at / by (у меня = I have)", "function"], ["о", "about (+ prepositional)", "function"], ["для", "for", "function"], ["по́сле", "after", "function"], ["до", "until / before", "function"], ["вме́сте", "together", "function"], ["до́ма", "at home", "function"], ["домо́й", "(to) home", "function"], ["мо́жно", "may / it's allowed", "function"], ["нельзя́", "not allowed / can't", "function"], ["на́до", "need to / must", "function"], ["ну́жно", "need to / must", "function"], ["ско́ро", "soon", "function"], ["давно́", "long ago / for a long time", "function"], ["быть", "to be", "verbs"], ["есть", "to eat / there is", "verbs"], ["пить", "to drink", "verbs"], ["жить", "to live", "verbs"], ["знать", "to know", "verbs"], ["ду́мать", "to think", "verbs"], ["говори́ть", "to speak / to say", "verbs"], ["сказа́ть", "to say / tell (perfective)", "verbs"], ["хоте́ть", "to want", "verbs"], ["мочь", "to be able, can", "verbs"], ["люби́ть", "to love / like", "verbs"], ["нра́виться", "to be liked (мне нравится = I like)", "verbs"], ["де́лать / сде́лать", "to do / make (impf / pf)", "verbs"], ["рабо́тать", "to work", "verbs"], ["учи́ть / вы́учить", "to learn (memorize) / teach", "verbs"], ["учи́ться", "to study (be a student)", "verbs"], ["занима́ться", "to study / work out / do (an activity)", "verbs"], ["чита́ть / прочита́ть", "to read", "verbs"], ["писа́ть / написа́ть", "to write", "verbs"], ["слу́шать", "to listen", "verbs"], ["слы́шать", "to hear", "verbs"], ["смотре́ть / посмотре́ть", "to watch / look", "verbs"], ["ви́деть / уви́деть", "to see", "verbs"], ["понима́ть / поня́ть", "to understand", "verbs"], ["идти́", "to go on foot (one way, now)", "verbs"], ["ходи́ть", "to go on foot (habitually / round trip)", "verbs"], ["е́хать", "to go by vehicle (one way, now)", "verbs"], ["е́здить", "to go by vehicle (habitually)", "verbs"], ["приходи́ть / прийти́", "to come / arrive (on foot)", "verbs"], ["звони́ть / позвони́ть", "to call (phone)", "verbs"], ["спра́шивать / спроси́ть", "to ask (a question)", "verbs"], ["проси́ть / попроси́ть", "to ask for / request", "verbs"], ["отвеча́ть / отве́тить", "to answer", "verbs"], ["помога́ть / помо́чь", "to help", "verbs"], ["дава́ть / дать", "to give", "verbs"], ["брать / взять", "to take", "verbs"], ["покупа́ть / купи́ть", "to buy", "verbs"], ["продава́ть", "to sell", "verbs"], ["гото́вить / пригото́вить", "to cook / prepare", "verbs"], ["спать", "to sleep", "verbs"], ["встава́ть / встать", "to get up", "verbs"], ["игра́ть", "to play", "verbs"], ["гуля́ть", "to walk / hang out", "verbs"], ["ждать", "to wait", "verbs"], ["иска́ть", "to look for", "verbs"], ["найти́", "to find", "verbs"], ["начина́ть / нача́ть", "to begin", "verbs"], ["открыва́ть / откры́ть", "to open", "verbs"], ["закрыва́ть / закры́ть", "to close", "verbs"], ["по́мнить", "to remember", "verbs"], ["забыва́ть / забы́ть", "to forget", "verbs"], ["знако́миться / познако́миться", "to get acquainted / meet someone new", "verbs"], ["встреча́ться / встре́титься", "to meet up", "verbs"], ["сиде́ть", "to sit", "verbs"], ["стоя́ть", "to stand", "verbs"], ["петь", "to sing", "verbs"], ["отдыха́ть", "to rest / relax", "verbs"], ["устава́ть / уста́ть", "to get tired", "verbs"], ["моли́ться", "to pray", "verbs"], ["ве́рить", "to believe", "verbs"], ["благодари́ть", "to thank", "verbs"], ["скуча́ть", "to miss (someone) / be bored", "verbs"], ["улыба́ться", "to smile", "verbs"], ["сме́яться", "to laugh", "verbs"], ["сто́ить", "to cost", "verbs"], ["плати́ть / заплати́ть", "to pay", "verbs"], ["пока́зывать / показа́ть", "to show", "verbs"], ["объясня́ть / объясни́ть", "to explain", "verbs"], ["переводи́ть / перевести́", "to translate", "verbs"], ["повторя́ть / повтори́ть", "to repeat", "verbs"], ["трениро́ваться", "to train / work out", "verbs"], ["бе́гать", "to run (habitually)", "verbs"], ["пла́вать", "to swim", "verbs"], ["челове́к", "person (m)", "people"], ["лю́ди", "people", "people"], ["мужчи́на", "man (m)", "people"], ["же́нщина", "woman (f)", "people"], ["па́рень", "guy (m)", "people"], ["де́вушка", "young woman / girlfriend (f)", "people"], ["ма́льчик", "boy (m)", "people"], ["де́вочка", "girl (f)", "people"], ["друг", "friend (m)", "people"], ["подру́га", "friend (female)", "people"], ["семья́", "family (f)", "people"], ["ма́ма", "mom (f)", "people"], ["па́па", "dad (m)", "people"], ["мать", "mother (f)", "people"], ["оте́ц", "father (m)", "people"], ["брат", "brother (m)", "people"], ["сестра́", "sister (f)", "people"], ["сын", "son (m)", "people"], ["дочь", "daughter (f)", "people"], ["ребёнок", "child (m)", "people"], ["де́ти", "children", "people"], ["ба́бушка", "grandma (f)", "people"], ["де́душка", "grandpa (m)", "people"], ["муж", "husband (m)", "people"], ["жена́", "wife (f)", "people"], ["учи́тель", "teacher (m)", "people"], ["студе́нт", "student (m)", "people"], ["врач", "doctor (m)", "people"], ["сосе́д", "neighbor (m)", "people"], ["па́стор", "pastor (m)", "people"], ["Бог", "God (m)", "people"], ["вре́мя", "time (n)", "time"], ["день", "day (m)", "time"], ["ночь", "night (f)", "time"], ["у́тро", "morning (n)", "time"], ["ве́чер", "evening (m)", "time"], ["неде́ля", "week (f)", "time"], ["ме́сяц", "month (m)", "time"], ["год", "year (m)", "time"], ["час", "hour (m)", "time"], ["мину́та", "minute (f)", "time"], ["выходны́е", "weekend", "time"], ["понеде́льник", "Monday (m)", "time"], ["вто́рник", "Tuesday (m)", "time"], ["среда́", "Wednesday (f)", "time"], ["четве́рг", "Thursday (m)", "time"], ["пя́тница", "Friday (f)", "time"], ["суббо́та", "Saturday (f)", "time"], ["воскресе́нье", "Sunday (n)", "time"], ["зима́", "winter (f)", "time"], ["весна́", "spring (f)", "time"], ["ле́то", "summer (n)", "time"], ["о́сень", "autumn (f)", "time"], ["дом", "house / home (m)", "places"], ["кварти́ра", "apartment (f)", "places"], ["ко́мната", "room (f)", "places"], ["го́род", "city (m)", "places"], ["страна́", "country (f)", "places"], ["у́лица", "street (f)", "places"], ["магази́н", "store (m)", "places"], ["рестора́н", "restaurant (m)", "places"], ["кафе́", "café (n, never changes)", "places"], ["шко́ла", "school (f)", "places"], ["университе́т", "university (m)", "places"], ["ко́лледж", "college (m)", "places"], ["рабо́та", "work / job (f)", "places"], ["це́рковь", "church (f)", "places"], ["библиоте́ка", "library (f)", "places"], ["больни́ца", "hospital (f)", "places"], ["аэропо́рт", "airport (m)", "places"], ["спортза́л", "gym (m)", "places"], ["парк", "park (m)", "places"], ["мо́ре", "sea (n)", "places"], ["гора́", "mountain (f)", "places"], ["Росси́я", "Russia (f)", "places"], ["Аме́рика", "America (f)", "places"], ["вода́", "water (f)", "food"], ["еда́", "food (f)", "food"], ["хлеб", "bread (m)", "food"], ["молоко́", "milk (n)", "food"], ["ко́фе", "coffee (m, never changes)", "food"], ["чай", "tea (m)", "food"], ["сок", "juice (m)", "food"], ["мя́со", "meat (n)", "food"], ["ры́ба", "fish (f)", "food"], ["ку́рица", "chicken (f)", "food"], ["я́блоко", "apple (n)", "food"], ["пе́рсик", "peach (m)", "food"], ["сыр", "cheese (m)", "food"], ["яйцо́", "egg (n)", "food"], ["суп", "soup (m)", "food"], ["карто́шка", "potatoes (f)", "food"], ["са́хар", "sugar (m)", "food"], ["соль", "salt (f)", "food"], ["ма́сло", "butter / oil (n)", "food"], ["фру́кты", "fruit", "food"], ["о́вощи", "vegetables", "food"], ["пи́цца", "pizza (f)", "food"], ["за́втрак", "breakfast (m)", "food"], ["обе́д", "lunch (m)", "food"], ["у́жин", "dinner (m)", "food"], ["кни́га", "book (f)", "things"], ["телефо́н", "phone (m)", "things"], ["компью́тер", "computer (m)", "things"], ["маши́на", "car (f)", "things"], ["стол", "table (m)", "things"], ["стул", "chair (m)", "things"], ["дверь", "door (f)", "things"], ["окно́", "window (n)", "things"], ["крова́ть", "bed (f)", "things"], ["оде́жда", "clothes (f)", "things"], ["де́ньги", "money (plural only)", "things"], ["ключ", "key (m)", "things"], ["фо́то", "photo (n, never changes)", "things"], ["сообще́ние", "message (n)", "things"], ["му́зыка", "music (f)", "things"], ["пе́сня", "song (f)", "things"], ["фильм", "movie (m)", "things"], ["игра́", "game (f)", "things"], ["Би́блия", "Bible (f)", "things"], ["язы́к", "language / tongue (m)", "things"], ["сло́во", "word (n)", "things"], ["вопро́с", "question (m)", "things"], ["отве́т", "answer (m)", "things"], ["пробле́ма", "problem (f)", "things"], ["иде́я", "idea (f)", "things"], ["де́ло", "matter / business / thing to do (n)", "things"], ["жизнь", "life (f)", "things"], ["любо́вь", "love (f)", "things"], ["мир", "world / peace (m)", "things"], ["се́рдце", "heart (n)", "things"], ["голова́", "head (f)", "things"], ["рука́", "hand / arm (f)", "things"], ["нога́", "leg / foot (f)", "things"], ["глаз", "eye (m)", "things"], ["лицо́", "face (n)", "things"], ["пого́да", "weather (f)", "things"], ["со́лнце", "sun (n)", "things"], ["дождь", "rain (m)", "things"], ["снег", "snow (m)", "things"], ["хоро́ший", "good", "adjectives"], ["плохо́й", "bad", "adjectives"], ["большо́й", "big", "adjectives"], ["ма́ленький", "small", "adjectives"], ["но́вый", "new", "adjectives"], ["ста́рый", "old", "adjectives"], ["молодо́й", "young", "adjectives"], ["краси́вый", "beautiful", "adjectives"], ["интере́сный", "interesting", "adjectives"], ["ску́чный", "boring", "adjectives"], ["ва́жный", "important", "adjectives"], ["тру́дный", "difficult", "adjectives"], ["лёгкий", "easy / light", "adjectives"], ["бы́стрый", "fast", "adjectives"], ["горя́чий", "hot (to the touch)", "adjectives"], ["холо́дный", "cold", "adjectives"], ["тёплый", "warm", "adjectives"], ["вку́сный", "tasty", "adjectives"], ["дорого́й", "expensive / dear", "adjectives"], ["дешёвый", "cheap", "adjectives"], ["счастли́вый", "happy", "adjectives"], ["гру́стный", "sad", "adjectives"], ["свобо́дный", "free (not busy)", "adjectives"], ["за́нят / занята́", "busy (said by a man / a woman)", "adjectives"], ["ру́сский", "Russian", "adjectives"], ["америка́нский", "American", "adjectives"], ["англи́йский", "English", "adjectives"], ["пе́рвый", "first", "adjectives"], ["после́дний", "last", "adjectives"], ["друго́й", "other / different", "adjectives"], ["люби́мый", "favorite / beloved", "adjectives"], ["смешно́й", "funny", "adjectives"], ["до́брый", "kind", "adjectives"], ["у́мный", "smart", "adjectives"], ["си́льный", "strong", "adjectives"], ["бе́лый", "white", "adjectives"], ["чёрный", "black", "adjectives"], ["кра́сный", "red", "adjectives"], ["си́ний", "blue", "adjectives"], ["зелёный", "green", "adjectives"], ["хорошо́", "well / good", "adverbs"], ["пло́хо", "badly / bad", "adverbs"], ["интере́сно", "interesting(ly)", "adverbs"], ["ве́село", "fun", "adverbs"], ["гру́стно", "sad(ly)", "adverbs"], ["хо́лодно", "(it's) cold", "adverbs"], ["тепло́", "(it's) warm", "adverbs"], ["жа́рко", "(it's) hot", "adverbs"], ["бы́стро", "quickly", "adverbs"], ["ме́дленно", "slowly", "adverbs"], ["пра́вильно", "correct(ly)", "adverbs"], ["по-ру́сски", "in Russian", "adverbs"], ["по-англи́йски", "in English", "adverbs"], ["ноль", "zero", "numbers"], ["оди́н / одна́ / одно́", "one (m / f / n)", "numbers"], ["два / две", "two (m+n / f)", "numbers"], ["три", "three", "numbers"], ["четы́ре", "four", "numbers"], ["пять", "five", "numbers"], ["шесть", "six", "numbers"], ["семь", "seven", "numbers"], ["во́семь", "eight", "numbers"], ["де́вять", "nine", "numbers"], ["де́сять", "ten", "numbers"], ["два́дцать", "twenty", "numbers"], ["сто", "one hundred", "numbers"], ["ты́сяча", "one thousand", "numbers"]];
+const LABELS = {phrases:"Phrases",pronouns:"Pronouns",questions:"Question words",function:"Small words",verbs:"Verbs",people:"People",time:"Time",places:"Places",food:"Food and drink",things:"Things and ideas",adjectives:"Adjectives",adverbs:"Adverbs and states",numbers:"Numbers"};
+const DAY = 86400000;
+const today = () => { const d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset()*60000) / DAY); };
+const $ = id => document.getElementById(id);
+const LSKEY = "ru-core-420-v1";
+
+// ---- state ----
+let S = { cards:{}, npd:7, nd:{day:0,count:0}, extra:{day:0,count:0} };
+// cards[i] = [dueDay, intervalDays, ease%, reps, lapses]
+let queue = [], cur = null, shown = false;
+let db = null, docRef = null, mode = "local";
+
+function lsRead(){ try{ const t = localStorage.getItem(LSKEY); return t ? JSON.parse(t) : null; }catch(e){ return null; } }
+function lsWrite(){ try{ localStorage.setItem(LSKEY, JSON.stringify(S)); }catch(e){} }
+
+function newQuota(){
+  const t = today();
+  const done = S.nd.day === t ? S.nd.count : 0;
+  const extra = S.extra.day === t ? S.extra.count : 0;
+  return Math.max(0, S.npd + extra - done);
+}
+function buildQueue(){
+  const t = today();
+  const due = [], fresh = [];
+  CARDS.forEach((c,i)=>{
+    const s = S.cards[i];
+    if (s) { if (s[0] <= t) due.push(i); }
+    else fresh.push(i);
+  });
+  due.sort((a,b)=>S.cards[a][0]-S.cards[b][0]);
+  queue = due.concat(fresh.slice(0,newQuota()));
+}
+
+function fmt(d){ return d<=0 ? "<10m" : d===1 ? "1d" : d<30 ? d+"d" : d<365 ? Math.round(d/30)+"mo" : (d/365).toFixed(1)+"y"; }
+function next(i, g){
+  const s = S.cards[i] || [0,0,250,0,0];
+  let [due,iv,ease,reps,lapses] = s;
+  if (g===1){ iv=0; ease=Math.max(130,ease-20); lapses++; }
+  else if (g===2){ iv = iv===0 ? 1 : Math.max(iv+1, Math.round(iv*1.2)); ease=Math.max(130,ease-15); }
+  else if (g===3){ iv = iv===0 ? 1 : iv===1 ? 3 : Math.max(iv+1, Math.round(iv*ease/100)); }
+  else { iv = iv===0 ? 4 : Math.max(iv+2, Math.round(iv*ease/100*1.3)); ease+=15; }
+  return [today()+iv, iv, ease, reps+1, lapses];
+}
+
+function stats(){
+  const t = today(); let due=0, seen=0, known=0;
+  for (const k in S.cards){ const s=S.cards[k]; seen++; if (s[0]<=t) due++; if (s[1]>=21) known++; }
+  $("s-due").textContent = due;
+  $("s-new").textContent = (S.nd.day===t?S.nd.count:0) + " / " + (S.npd + (S.extra.day===t?S.extra.count:0));
+  $("s-seen").textContent = seen;
+  $("s-known").textContent = known;
+  $("bar").style.width = (seen/CARDS.length*100).toFixed(1)+"%";
+}
+
+function render(){
+  stats();
+  shown = false;
+  $("c-en").hidden = true; $("rate").hidden = true;
+  if (!queue.length){
+    $("cardbox").hidden = true; $("controls").hidden = true; $("done").hidden = false;
+    const left = CARDS.length - Object.keys(S.cards).length;
+    $("more").hidden = left === 0;
+    $("done-msg").textContent = left === 0 ? "You have started every card. Keep doing your daily reviews." : "Come back tomorrow. Your next reviews are scheduled.";
+    return;
+  }
+  $("cardbox").hidden = false; $("controls").hidden = false; $("done").hidden = true;
+  cur = queue[0];
+  const c = CARDS[cur], isNew = !S.cards[cur];
+  $("c-tag").innerHTML = "";
+  $("c-tag").append(LABELS[c[2]] || "");
+  if (isNew){ const e=document.createElement("em"); e.textContent="new"; $("c-tag").append(e); }
+  $("c-ru").textContent = c[0];
+  $("c-en").textContent = c[1];
+  $("show").disabled = false;
+  $("show").hidden = false;
+  $("c-listen").hidden = !ruVoice;
+}
+function reveal(){
+  if (cur===null || shown) return;
+  shown = true;
+  $("c-en").hidden = false; $("show").hidden = true; $("rate").hidden = false;
+  for (let g=1; g<=4; g++) $("p"+g).textContent = fmt(next(cur,g)[1]);
+  $("r3").focus({preventScroll:true});
+}
+function rate(g){
+  if (!shown) return;
+  const t = today(), wasNew = !S.cards[cur];
+  S.cards[cur] = next(cur, g);
+  if (wasNew){ if (S.nd.day!==t) S.nd={day:t,count:0}; S.nd.count++; }
+  queue.shift();
+  if (g===1) queue.splice(Math.min(3, queue.length), 0, cur);
+  save();
+  render();
+}
+
+// ---- saving ----
+let saving = false, pending = false, timer = null;
+function setSync(cls, text){ const el=$("sync"); el.className="chip "+cls; $("sync-t").textContent=text; }
+function save(){
+  lsWrite();
+  if (mode!=="db") return;
+  clearTimeout(timer);
+  timer = setTimeout(flush, 1200);
+  setSync("warn","Saving…");
+}
+async function flush(){
+  if (mode!=="db") return;
+  if (saving){ pending = true; return; }
+  saving = true; pending = false;
+  try{ await docRef.set(JSON.parse(JSON.stringify(S))); setSync("ok","Saved to your Claude account (syncs across devices)"); }
+  catch(e){
+    if (e && e.code==="unavailable"){ setTimeout(flush, 1500 + Math.random()*1500); }
+    else setSync("err","Couldn't save online. Progress is kept in this browser for now.");
+  }
+  finally{ saving=false; if (pending) flush(); }
+}
+document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState==="hidden" && mode==="db"){ clearTimeout(timer); flush(); } });
+
+// ---- audio ----
+let ruVoice = null;
+function pickVoice(){
+  try{
+    const vs = speechSynthesis.getVoices();
+    ruVoice = vs.find(v=>/^ru/i.test(v.lang)) || null;
+    if (cur!==null && !$("cardbox").hidden) $("c-listen").hidden = !ruVoice;
+  }catch(e){ ruVoice=null; }
+}
+if ("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+$("c-listen").onclick = ()=>{
+  if (!ruVoice || cur===null) return;
+  const text = CARDS[cur][0].replace(/́/g,"").replace(/\s\/\s/g,", ").replace(/\.\.\./g,"");
+  const u = new SpeechSynthesisUtterance(text); u.voice = ruVoice; u.lang = ruVoice.lang; u.rate = .85;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+};
+
+// ---- browse ----
+function drawList(){
+  const q = $("q").value.trim().toLowerCase().replace(/́/g,"");
+  const box = $("list"); box.innerHTML = "";
+  let curTag = null;
+  CARDS.forEach((c,i)=>{
+    const ru = c[0].replace(/́/g,"").toLowerCase();
+    if (q && !ru.includes(q) && !c[1].toLowerCase().includes(q)) return;
+    if (c[2]!==curTag){ curTag=c[2]; const h=document.createElement("h3"); h.textContent=LABELS[curTag]; box.append(h); }
+    const s = S.cards[i];
+    const r = document.createElement("div"); r.className="row";
+    const d = document.createElement("i"); d.className = "dot" + (s ? (s[1]>=21?" k":" l") : "");
+    const w = document.createElement("div"); w.className="w"; w.textContent=c[0];
+    const m = document.createElement("div"); m.className="m"; m.textContent=c[1];
+    r.append(d,w,m); box.append(r);
+  });
+  if (!box.children.length){ const p=document.createElement("p"); p.className="hint"; p.style.padding="12px"; p.textContent="No words match that search."; box.append(p); }
+}
+$("q").oninput = drawList;
+
+function tab(which){
+  const study = which==="study";
+  $("tab-study").setAttribute("aria-selected", study); $("tab-browse").setAttribute("aria-selected", !study);
+  $("study").hidden = !study; $("browse").hidden = study;
+  if (!study) drawList();
+}
+$("tab-study").onclick = ()=>tab("study");
+$("tab-browse").onclick = ()=>tab("browse");
+
+// ---- controls ----
+$("show").onclick = reveal;
+[1,2,3,4].forEach(g=> $("r"+g).onclick = ()=>rate(g));
+$("more").onclick = ()=>{
+  const t=today(); if (S.extra.day!==t) S.extra={day:t,count:0}; S.extra.count+=7;
+  save(); buildQueue(); render();
+};
+$("npd").onchange = e=>{ S.npd = +e.target.value; save(); buildQueue(); render(); };
+document.addEventListener("keydown", e=>{
+  if ($("study").hidden || e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
+  if ((e.key===" "||e.key==="Enter") && !shown && cur!==null && !$("cardbox").hidden){ e.preventDefault(); reveal(); }
+  else if (shown && "1234".includes(e.key)){ e.preventDefault(); rate(+e.key); }
+});
+
+
+// ---- backup / restore ----
+let restoreArmed = false;
+function encodeState(){ return "RU420:" + btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+function decodeState(t){
+  t = (t||"").trim(); if (!t.startsWith("RU420:")) return null;
+  try{ const o = JSON.parse(decodeURIComponent(escape(atob(t.slice(6))))); return o && typeof o.cards==="object" ? o : null; }catch(e){ return null; }
+}
+$("bk-copy").onclick = ()=>{
+  const code = encodeState(); $("bk-text").value = code; restoreArmed = false;
+  const done = ()=>{ $("bk-msg").textContent = "Copied. Paste it into this page on your other device and press Restore."; };
+  try{ navigator.clipboard.writeText(code).then(done, ()=>{ $("bk-text").select(); $("bk-msg").textContent = "Code selected below. Press Ctrl+C (or long-press and Copy)."; }); }
+  catch(e){ $("bk-text").select(); $("bk-msg").textContent = "Code selected below. Press Ctrl+C (or long-press and Copy)."; }
+};
+$("bk-text").oninput = ()=>{ restoreArmed = false; $("bk-msg").textContent = ""; };
+$("bk-restore").onclick = ()=>{
+  const o = decodeState($("bk-text").value);
+  if (!o){ $("bk-msg").textContent = "That doesn't look like a backup code. It should start with RU420:"; restoreArmed=false; return; }
+  const n = Object.keys(o.cards).length, mine = Object.keys(S.cards).length;
+  if (!restoreArmed){ restoreArmed = true; $("bk-msg").textContent = "This code has "+n+" cards started. It will replace the "+mine+" started here. Press Restore again to confirm."; return; }
+  restoreArmed = false; adopt(o); lsWrite(); save(); buildQueue(); render();
+  $("bk-msg").textContent = "Restored. "+n+" cards started.";
+};
+
+// ---- start ----
+function adopt(data){
+  if (data && typeof data==="object" && data.cards){
+    S = Object.assign({cards:{},npd:7,nd:{day:0,count:0},extra:{day:0,count:0}}, data);
+  }
+  $("npd").value = String(S.npd);
+}
+function start(){
+  adopt(lsRead());
+  buildQueue(); render();
+  setSync("ok","Progress saved in this browser");
+  try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+}
+start();
+</script>
+
+</body>
+</html>
